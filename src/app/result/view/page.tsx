@@ -6,46 +6,46 @@ import Link from "next/link";
 import ShareBar from "@/components/ui/ShareBar";
 import SyncedVideoPlayer from "@/components/ui/SyncedVideoPlayer";
 import Confetti from "@/components/ui/Confetti";
-import { decodeOutputsFromUrl } from "@/lib/share";
+import { loadResultFromStorage, decodeOutputsFromUrl } from "@/lib/share";
 import type {
   GenerationOutputs,
   MemeOutput,
   CreativeBriefs,
 } from "@/lib/types";
 
+type DecodedResult = {
+  outputs: GenerationOutputs;
+  profile: { handle: string; display_name: string; platform: string } | null;
+  briefs: CreativeBriefs | null;
+};
+
 function ResultContent() {
   const searchParams = useSearchParams();
+  const sid = searchParams.get("sid");
   const data = searchParams.get("data");
 
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center">
-          <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-bold mb-4">
-            No results found
-          </h1>
-          <Link href="/create" className="neon-button inline-block">
-            Create Yours
-          </Link>
-        </div>
-      </div>
-    );
+  // Try sessionStorage first (fast, reliable for same-tab), then URL param
+  let decoded: DecodedResult | null = null;
+
+  if (sid) {
+    const stored = loadResultFromStorage(sid);
+    if (stored) decoded = stored as DecodedResult;
   }
 
-  let decoded: {
-    outputs: GenerationOutputs;
-    profile: { handle: string; display_name: string; platform: string } | null;
-    briefs: CreativeBriefs | null;
-  };
+  if (!decoded && data) {
+    try {
+      decoded = decodeOutputsFromUrl(data) as DecodedResult;
+    } catch {
+      // Fall through to error state
+    }
+  }
 
-  try {
-    decoded = decodeOutputsFromUrl(data) as typeof decoded;
-  } catch {
+  if (!decoded) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center">
           <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-bold mb-4">
-            Invalid result data
+            {data ? "Invalid result data" : "No results found"}
           </h1>
           <Link href="/create" className="neon-button inline-block">
             Create Yours

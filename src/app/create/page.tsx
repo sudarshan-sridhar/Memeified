@@ -9,7 +9,7 @@ import FeatureSelector from "@/components/ui/FeatureSelector";
 import ProgressTracker from "@/components/ui/ProgressTracker";
 import { useGeneration } from "@/hooks/useGeneration";
 import type { FeatureConfig } from "@/lib/types";
-import { encodeOutputsForUrl } from "@/lib/share";
+import { saveResultToStorage, encodeOutputsForUrl } from "@/lib/share";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function CreatePage() {
 
   // Navigate to results when generation is complete
   if (state.status === "complete" && Object.keys(state.outputs).length > 0) {
-    const encoded = encodeOutputsForUrl({
+    const resultData = {
       outputs: state.outputs,
       profile: state.profile
         ? {
@@ -57,9 +57,14 @@ export default function CreatePage() {
           }
         : null,
       briefs: state.briefs,
-    });
+    };
+
+    // Save to sessionStorage (reliable for same-tab nav), use base64 URL as fallback
+    const storageId = saveResultToStorage(resultData);
+    const encoded = encodeOutputsForUrl(resultData);
+
     setTimeout(() => {
-      router.push(`/result/view?data=${encodeURIComponent(encoded)}`);
+      router.push(`/result/view?sid=${storageId}&data=${encodeURIComponent(encoded)}`);
     }, 1500);
   }
 

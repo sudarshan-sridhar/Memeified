@@ -53,7 +53,35 @@ export async function nativeShare(
   }
 }
 
-// Encode generation outputs into a URL-safe base64 string
+// === Result persistence ===
+// Primary: sessionStorage (same-tab navigation from /create → /result)
+// Fallback: URL-safe base64 in query param (shared links)
+
+const STORAGE_KEY = "mce_result";
+
+/** Save result data to sessionStorage and return a short ID */
+export function saveResultToStorage(data: Record<string, unknown>): string {
+  const id = Math.random().toString(36).slice(2, 10);
+  try {
+    sessionStorage.setItem(`${STORAGE_KEY}_${id}`, JSON.stringify(data));
+  } catch {
+    // sessionStorage full or unavailable — fall through to URL encoding
+  }
+  return id;
+}
+
+/** Load result data from sessionStorage by ID */
+export function loadResultFromStorage(id: string): Record<string, unknown> | null {
+  try {
+    const raw = sessionStorage.getItem(`${STORAGE_KEY}_${id}`);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // Ignore parse errors
+  }
+  return null;
+}
+
+/** Encode generation outputs into a URL-safe base64 string (fallback for sharing) */
 export function encodeOutputsForUrl(outputs: Record<string, unknown>): string {
   const json = JSON.stringify(outputs);
   const bytes = new TextEncoder().encode(json);
@@ -61,13 +89,11 @@ export function encodeOutputsForUrl(outputs: Record<string, unknown>): string {
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  // Convert to URL-safe base64: replace + with -, / with _, strip =
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// Decode generation outputs from a URL-safe base64 string
+/** Decode generation outputs from a URL-safe base64 string */
 export function decodeOutputsFromUrl(encoded: string): Record<string, unknown> {
-  // Restore standard base64: replace - with +, _ with /, add padding
   let b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
   while (b64.length % 4) b64 += "=";
   const binary = atob(b64);

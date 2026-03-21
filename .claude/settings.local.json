@@ -42,7 +42,8 @@
       "Bash(git -C C:/Memeified status)",
       "Bash(command -v vercel)",
       "Bash(git init:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node:*)"
     ]
   }
 }
