@@ -53,21 +53,24 @@ export async function nativeShare(
   }
 }
 
-// Encode generation outputs into a shareable URL parameter (UTF-8 safe)
+// Encode generation outputs into a URL-safe base64 string
 export function encodeOutputsForUrl(outputs: Record<string, unknown>): string {
   const json = JSON.stringify(outputs);
-  // Use TextEncoder for UTF-8 safe base64
   const bytes = new TextEncoder().encode(json);
   let binary = "";
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary);
+  // Convert to URL-safe base64: replace + with -, / with _, strip =
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// Decode generation outputs from a URL parameter (UTF-8 safe)
+// Decode generation outputs from a URL-safe base64 string
 export function decodeOutputsFromUrl(encoded: string): Record<string, unknown> {
-  const binary = atob(encoded);
+  // Restore standard base64: replace - with +, _ with /, add padding
+  let b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  while (b64.length % 4) b64 += "=";
+  const binary = atob(b64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);

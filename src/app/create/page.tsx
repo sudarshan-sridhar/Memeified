@@ -59,7 +59,7 @@ export default function CreatePage() {
       briefs: state.briefs,
     });
     setTimeout(() => {
-      router.push(`/result/view?data=${encoded}`);
+      router.push(`/result/view?data=${encodeURIComponent(encoded)}`);
     }, 1500);
   }
 
