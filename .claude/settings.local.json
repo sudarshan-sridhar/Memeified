@@ -43,7 +43,9 @@
       "Bash(command -v vercel)",
       "Bash(git init:*)",
       "Bash(git commit:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(source /c/Memeified/.env.local)",
+      "Bash(node -e \":*)"
     ]
   }
 }

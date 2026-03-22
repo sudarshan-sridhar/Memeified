@@ -100,15 +100,22 @@ export default function CreatePage() {
             disabled={isGenerating}
           />
 
-          {/* Optional extra context (collapsible) */}
-          <details className="group">
+          {/* Extra context — open by default for Instagram since scraping is limited */}
+          <details className="group" open={platform === "instagram"}>
             <summary className="text-sm text-text-secondary font-semibold uppercase tracking-wide cursor-pointer select-none flex items-center gap-2 hover:text-text-primary transition-colors">
               <span className="text-neon-purple group-open:rotate-90 transition-transform">&#9654;</span>
               Add more context
               <span className="normal-case font-normal text-xs opacity-60">
-                (optional — helps AI make better content)
+                {platform === "instagram"
+                  ? "(recommended for Instagram)"
+                  : "(optional — helps AI make better content)"}
               </span>
             </summary>
+            {platform === "instagram" && (
+              <p className="text-xs text-neon-orange mt-2">
+                Instagram limits data access — add your bio and interests below for the best results.
+              </p>
+            )}
             <div className="space-y-3 mt-3">
               <textarea
                 value={bio}
