@@ -178,9 +178,9 @@ function minimalInstagramProfile(handle: string): ProfileData {
     platform: "instagram",
     handle,
     display_name: handle,
-    bio: "",
+    bio: `Instagram creator @${handle}`,
     profile_pic_url: "",
-    recent_posts: [],
+    recent_posts: [`Content creator and Instagram personality @${handle}`],
     follower_count: 0,
     following_count: 0,
   };

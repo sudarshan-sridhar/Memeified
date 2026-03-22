@@ -147,13 +147,21 @@ export function useGeneration() {
         // Merge user-provided bio/vibes into scraped profile
         const profile = { ...scrapeResult.profile };
         if (userInput?.bio) {
-          profile.bio = userInput.bio;
+          // User bio supplements scraped bio
+          profile.bio = profile.bio
+            ? `${profile.bio} | ${userInput.bio}`
+            : userInput.bio;
         }
         if (userInput?.vibes) {
           profile.recent_posts = [
             ...profile.recent_posts,
             ...userInput.vibes.split("\n").filter(Boolean),
           ];
+        }
+        // Ensure there's always some context for the AI
+        if (!profile.bio && !profile.recent_posts.length) {
+          profile.bio = `${platform} user @${handle}`;
+          profile.recent_posts = [`Social media personality @${handle}`];
         }
 
         dispatch({ type: "SET_PROFILE", profile });
