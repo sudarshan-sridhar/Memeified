@@ -103,49 +103,67 @@ export async function scrapeInstagram(handle: string): Promise<ProfileData> {
 }
 
 /**
- * Instagram's internal API — no auth needed, works from most server IPs.
+ * Instagram's internal API — no auth needed, may work from some server IPs.
+ * Tries both the mobile API and the web GraphQL endpoint.
  */
 async function scrapeInstagramDirect(handle: string): Promise<ProfileData | null> {
-  const res = await fetch(
-    `https://i.instagram.com/api/v1/users/web_profile_info/?username=${handle}`,
+  // Try mobile API first
+  const endpoints: { url: string; headers: Record<string, string> }[] = [
     {
+      url: `https://i.instagram.com/api/v1/users/web_profile_info/?username=${handle}`,
       headers: {
         "User-Agent": "Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; samsung; SM-G991B; o1s; exynos2100)",
         "X-IG-App-ID": "936619743392459",
       },
+    },
+    {
+      url: `https://www.instagram.com/api/v1/users/web_profile_info/?username=${handle}`,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "X-IG-App-ID": "936619743392459",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    },
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint.url, { headers: endpoint.headers });
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const user = data?.data?.user;
+      if (!user) continue;
+
+      const bio = user.biography || "";
+      const posts: string[] = [];
+
+      const edges = user.edge_owner_to_timeline_media?.edges || [];
+      for (const edge of edges.slice(0, 10)) {
+        const caption = edge?.node?.edge_media_to_caption?.edges?.[0]?.node?.text;
+        if (caption) posts.push(caption);
+      }
+
+      if (posts.length === 0 && bio) {
+        posts.push(bio);
+      }
+
+      return {
+        platform: "instagram",
+        handle,
+        display_name: user.full_name || handle,
+        bio,
+        profile_pic_url: user.profile_pic_url_hd || user.profile_pic_url || "",
+        recent_posts: posts,
+        follower_count: user.edge_followed_by?.count || 0,
+        following_count: user.edge_follow?.count || 0,
+      };
+    } catch {
+      continue;
     }
-  );
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  const user = data?.data?.user;
-  if (!user) return null;
-
-  const bio = user.biography || "";
-  const posts: string[] = [];
-
-  // Extract recent post captions from edge_owner_to_timeline_media
-  const edges = user.edge_owner_to_timeline_media?.edges || [];
-  for (const edge of edges.slice(0, 10)) {
-    const caption = edge?.node?.edge_media_to_caption?.edges?.[0]?.node?.text;
-    if (caption) posts.push(caption);
   }
 
-  if (posts.length === 0 && bio) {
-    posts.push(bio);
-  }
-
-  return {
-    platform: "instagram",
-    handle,
-    display_name: user.full_name || handle,
-    bio,
-    profile_pic_url: user.profile_pic_url_hd || user.profile_pic_url || "",
-    recent_posts: posts,
-    follower_count: user.edge_followed_by?.count || 0,
-    following_count: user.edge_follow?.count || 0,
-  };
+  return null;
 }
 
 async function scrapeInstagramApify(handle: string, apifyKey: string): Promise<ProfileData> {

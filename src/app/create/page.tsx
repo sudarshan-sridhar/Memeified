@@ -100,23 +100,15 @@ export default function CreatePage() {
             disabled={isGenerating}
           />
 
-          {/* Extra context — open by default for Instagram since scraping is limited */}
-          <details className="group" open={platform === "instagram"}>
-            <summary className="text-sm text-text-secondary font-semibold uppercase tracking-wide cursor-pointer select-none flex items-center gap-2 hover:text-text-primary transition-colors">
-              <span className="text-neon-purple group-open:rotate-90 transition-transform">&#9654;</span>
-              Add more context
-              <span className="normal-case font-normal text-xs opacity-60">
-                {platform === "instagram"
-                  ? "(recommended for Instagram)"
-                  : "(optional — helps AI make better content)"}
-              </span>
-            </summary>
-            {platform === "instagram" && (
-              <p className="text-xs text-neon-orange mt-2">
-                Instagram limits data access — add your bio and interests below for the best results.
+          {/* Bio & vibes — always visible for Instagram, collapsible for Twitter */}
+          {platform === "instagram" ? (
+            <div className="space-y-3">
+              <label className="text-sm text-text-secondary font-semibold uppercase tracking-wide">
+                Tell us about yourself
+              </label>
+              <p className="text-xs text-neon-orange -mt-1">
+                Instagram limits scraping — fill these in so the AI can personalize your content.
               </p>
-            )}
-            <div className="space-y-3 mt-3">
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
@@ -134,7 +126,35 @@ export default function CreatePage() {
                 className="handle-input pl-5 text-sm resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
-          </details>
+          ) : (
+            <details className="group">
+              <summary className="text-sm text-text-secondary font-semibold uppercase tracking-wide cursor-pointer select-none flex items-center gap-2 hover:text-text-primary transition-colors">
+                <span className="text-neon-purple group-open:rotate-90 transition-transform">&#9654;</span>
+                Add more context
+                <span className="normal-case font-normal text-xs opacity-60">
+                  (optional — helps AI make better content)
+                </span>
+              </summary>
+              <div className="space-y-3 mt-3">
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Your bio, what you do, what you're about..."
+                  disabled={isGenerating}
+                  rows={2}
+                  className="handle-input pl-5 text-sm resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <textarea
+                  value={vibes}
+                  onChange={(e) => setVibes(e.target.value)}
+                  placeholder="Hot takes, interests, anything you want the AI to roast or hype..."
+                  disabled={isGenerating}
+                  rows={2}
+                  className="handle-input pl-5 text-sm resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+            </details>
+          )}
 
           {/* Feature Selector */}
           <FeatureSelector
