@@ -1,21 +1,17 @@
-// Share to Twitter/X with pre-filled text
-export function shareToTwitter(text: string, url: string) {
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+// Share to Twitter/X — includes media URL directly so followers can see the content
+export function shareToTwitter(text: string, mediaUrl: string) {
+  // Include the media URL in the tweet text so it shows as a link
+  const fullText = `${text}\n\n${mediaUrl}`;
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullText)}`;
   window.open(tweetUrl, "_blank", "noopener,noreferrer");
 }
 
-// Share to Instagram (download prompt — Instagram doesn't support direct sharing via URL)
-export function shareToInstagram(mediaUrl: string) {
-  downloadFile(mediaUrl, "mce-result");
-}
-
-// Copy link to clipboard
+// Copy media URL to clipboard (the actual image/video, not the app page)
 export async function copyLink(url: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(url);
     return true;
   } catch {
-    // Fallback for older browsers
     const input = document.createElement("input");
     input.value = url;
     document.body.appendChild(input);
@@ -26,62 +22,61 @@ export async function copyLink(url: string): Promise<boolean> {
   }
 }
 
-// Download a file
-export function downloadFile(url: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.target = "_blank";
-  a.rel = "noopener noreferrer";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// Native Web Share API (mobile-friendly)
-export async function nativeShare(
-  title: string,
-  text: string,
-  url: string
-): Promise<boolean> {
-  if (!navigator.share) return false;
+// Download a file — fetches as blob to handle cross-origin URLs
+export async function downloadFile(url: string, filename: string): Promise<void> {
   try {
-    await navigator.share({ title, text, url });
-    return true;
+    // Fetch as blob to bypass cross-origin download restrictions
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    // Detect extension from content-type
+    const contentType = res.headers.get("content-type") || "";
+    let ext = "";
+    if (contentType.includes("mp4") || url.includes(".mp4")) ext = ".mp4";
+    else if (contentType.includes("mp3") || url.includes(".mp3")) ext = ".mp3";
+    else if (contentType.includes("png") || url.includes(".png")) ext = ".png";
+    else if (contentType.includes("jpeg") || contentType.includes("jpg") || url.includes(".jpg")) ext = ".jpg";
+    else if (contentType.includes("webp")) ext = ".webp";
+    else ext = ".png";
+
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = `${filename}${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
   } catch {
-    return false;
+    // Fallback: open in new tab if fetch fails
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }
 
 // === Result persistence ===
-// Primary: sessionStorage (same-tab navigation from /create → /result)
-// Fallback: URL-safe base64 in query param (shared links)
 
 const STORAGE_KEY = "mce_result";
 
-/** Save result data to sessionStorage and return a short ID */
 export function saveResultToStorage(data: Record<string, unknown>): string {
   const id = Math.random().toString(36).slice(2, 10);
   try {
     sessionStorage.setItem(`${STORAGE_KEY}_${id}`, JSON.stringify(data));
   } catch {
-    // sessionStorage full or unavailable — fall through to URL encoding
+    // sessionStorage full or unavailable
   }
   return id;
 }
 
-/** Load result data from sessionStorage by ID */
 export function loadResultFromStorage(id: string): Record<string, unknown> | null {
   try {
     const raw = sessionStorage.getItem(`${STORAGE_KEY}_${id}`);
     if (raw) return JSON.parse(raw);
   } catch {
-    // Ignore parse errors
+    // Ignore
   }
   return null;
 }
 
-/** Encode generation outputs into a URL-safe base64 string (fallback for sharing) */
 export function encodeOutputsForUrl(outputs: Record<string, unknown>): string {
   const json = JSON.stringify(outputs);
   const bytes = new TextEncoder().encode(json);
@@ -92,7 +87,6 @@ export function encodeOutputsForUrl(outputs: Record<string, unknown>): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** Decode generation outputs from a URL-safe base64 string */
 export function decodeOutputsFromUrl(encoded: string): Record<string, unknown> {
   let b64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
   while (b64.length % 4) b64 += "=";

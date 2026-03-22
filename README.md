@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Main Character Energy
 
-## Getting Started
+> Drop your handle. Get your anime intro, fake trailer, roast video, and meme pack.
 
-First, run the development server:
+**[Try it live](https://memeified.vercel.app)**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+AI takes your Twitter/Instagram profile and turns it into shareable content — personalized memes, anime character intros with voiceover, cinematic fake trailers, and savage roast videos.
+
+Built for **FalconHacks 2025**.
+
+## Features
+
+- **Meme Pack** — 3 personalized memes based on your actual posts and bio
+- **Anime Intro** — AI-generated anime portrait + dramatic voiceover + animated video
+- **Fake Trailer** — Cinematic movie poster + narrator + video (pick your genre)
+- **Roast Video** — AI roasts your profile with a celebrity voice + video
+
+All content is shareable to Twitter/X and Instagram with one click.
+
+## How It Works
+
+1. Enter your Twitter or Instagram handle
+2. AI scrapes your public profile and writes creative briefs
+3. Magic Hour generates images, voices, and videos
+4. Share your results or download them
+
+## Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | Tailwind CSS v4, custom glass/neon design system |
+| 3D | React Three Fiber, Three.js (particles, floating cards, cyberpunk grid) |
+| Animations | GSAP ScrollTrigger, Framer Motion page transitions |
+| AI Briefs | Google Gemini 2.5 Flash |
+| Media Generation | [Magic Hour](https://magichour.ai) (images, memes, voice, video) |
+| Scraping | fxtwitter API (Twitter), Apify (Instagram) |
+| Deployment | Vercel |
+
+## Architecture
+
+```
+Client (useReducer pipeline)
+  → /api/scrape    → fxtwitter / Apify
+  → /api/brief     → Gemini 2.5 Flash
+  → /api/generate  → Magic Hour (image/meme/voice/video)
+  → /api/poll      → Magic Hour job status
+  → /api/upload    → re-upload images for video gen
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+All API routes are stateless serverless functions. The client drives the pipeline step-by-step, polling each job to completion.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Install dependencies
+npm install
 
-## Learn More
+# Set up environment variables
+cp .env.example .env.local
+# Fill in: MAGIC_HOUR_API_KEY, GEMINI_API_KEY, APIFY_API_KEY
 
-To learn more about Next.js, take a look at the following resources:
+# Run dev server
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment Variables
 
-## Deploy on Vercel
+| Variable | Description |
+|----------|-------------|
+| `MAGIC_HOUR_API_KEY` | [Magic Hour](https://magichour.ai) API key for media generation |
+| `GEMINI_API_KEY` | Google Gemini API key for creative brief generation |
+| `APIFY_API_KEY` | Apify API key for Instagram scraping (optional) |
+| `NEXT_PUBLIC_APP_URL` | Deployed app URL (for OG meta tags) |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Credits
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Media generation powered by [Magic Hour](https://magichour.ai)
+- Creative briefs by [Google Gemini](https://ai.google.dev/)
+- Profile scraping via [fxtwitter](https://github.com/FixTweet/FxTwitter) and [Apify](https://apify.com)

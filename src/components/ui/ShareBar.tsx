@@ -6,64 +6,50 @@ import { shareToTwitter, copyLink, downloadFile } from "@/lib/share";
 interface ShareBarProps {
   mediaUrl: string;
   shareText: string;
-  shareUrl: string;
   filename?: string;
 }
 
 export default function ShareBar({
   mediaUrl,
   shareText,
-  shareUrl,
   filename = "mce-result",
 }: ShareBarProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  const handleCopy = useCallback(async () => {
-    await copyLink(shareUrl);
+  const handleTwitter = useCallback(() => {
+    shareToTwitter(shareText, mediaUrl);
+  }, [shareText, mediaUrl]);
+
+  const handleCopyMedia = useCallback(async () => {
+    await copyLink(mediaUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [shareUrl]);
+  }, [mediaUrl]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
     setDownloading(true);
-    downloadFile(mediaUrl, filename);
-    setTimeout(() => setDownloading(false), 1500);
+    await downloadFile(mediaUrl, filename);
+    setDownloading(false);
   }, [mediaUrl, filename]);
-
-  const handleNativeShare = useCallback(async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Main Character Energy",
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch {
-        // User cancelled or not supported
-      }
-    }
-  }, [shareText, shareUrl]);
-
-  const hasNativeShare = typeof navigator !== "undefined" && !!navigator.share;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <button
-        onClick={() => shareToTwitter(shareText, shareUrl)}
+        onClick={handleTwitter}
         className="share-btn hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-95"
       >
-        Share on 𝕏
+        Share on X
       </button>
       <button
-        onClick={handleCopy}
+        onClick={handleDownload}
         className={`share-btn active:scale-95 ${
-          copied
-            ? "border-neon-green/50 text-neon-green"
-            : "hover:border-neon-purple/50 hover:text-neon-purple"
+          downloading
+            ? "border-neon-pink/50 text-neon-pink"
+            : "hover:border-neon-pink/50 hover:text-neon-pink"
         }`}
       >
-        {copied ? "Copied!" : "Copy Link"}
+        {downloading ? "Saving..." : "Save for IG"}
       </button>
       <button
         onClick={handleDownload}
@@ -75,14 +61,16 @@ export default function ShareBar({
       >
         {downloading ? "Saving..." : "Download"}
       </button>
-      {hasNativeShare && (
-        <button
-          onClick={handleNativeShare}
-          className="share-btn hover:border-neon-pink/50 hover:text-neon-pink active:scale-95"
-        >
-          Share...
-        </button>
-      )}
+      <button
+        onClick={handleCopyMedia}
+        className={`share-btn active:scale-95 ${
+          copied
+            ? "border-neon-green/50 text-neon-green"
+            : "hover:border-neon-purple/50 hover:text-neon-purple"
+        }`}
+      >
+        {copied ? "Copied!" : "Copy Link"}
+      </button>
     </div>
   );
 }

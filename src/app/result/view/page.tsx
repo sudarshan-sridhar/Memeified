@@ -56,7 +56,6 @@ function ResultContent() {
   }
 
   const { outputs, profile, briefs } = decoded;
-  const appUrl = typeof window !== "undefined" ? window.location.href : "";
   const handle = profile?.handle || "unknown";
 
   return (
@@ -113,7 +112,7 @@ function ResultContent() {
             <ShareBar
               mediaUrl={outputs.anime.video_url || outputs.anime.image_url || ""}
               shareText={`AI turned me into "${briefs?.anime?.archetype || "an anime character"}" ⚔️ -- made with @magichourai`}
-              shareUrl={appUrl}
+
               filename={`mce-anime-${handle}`}
             />
           </ResultSection>
@@ -157,7 +156,7 @@ function ResultContent() {
             <ShareBar
               mediaUrl={outputs.trailer.video_url || outputs.trailer.image_url || ""}
               shareText={`My AI movie trailer: "${briefs?.trailer?.movie_title || "UNTITLED"}" 🎬 -- made with @magichourai`}
-              shareUrl={appUrl}
+
               filename={`mce-trailer-${handle}`}
             />
           </ResultSection>
@@ -194,7 +193,7 @@ function ResultContent() {
             <ShareBar
               mediaUrl={outputs.roast.video_url || outputs.roast.image_url || ""}
               shareText={`AI roasted my profile 💀🔥 -- made with @magichourai`}
-              shareUrl={appUrl}
+
               filename={`mce-roast-${handle}`}
             />
           </ResultSection>
@@ -217,7 +216,7 @@ function ResultContent() {
                   <ShareBar
                     mediaUrl={meme.image_url}
                     shareText={`AI made this meme about me 😂 -- made with @magichourai`}
-                    shareUrl={appUrl}
+      
                     filename={`mce-meme-${handle}-${i + 1}`}
                   />
                 </div>

@@ -45,7 +45,11 @@
       "Bash(git commit:*)",
       "Bash(node:*)",
       "Bash(source /c/Memeified/.env.local)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(grep -r \"APIFY_API_KEY\\\\|MAGIC_HOUR_API_KEY\\\\|GEMINI_API_KEY\\\\|ANTHROPIC_API_KEY\\\\|apify_api\\\\|sk-ant\\\\|AIza\" --include=*.ts --include=*.tsx --include=*.js --include=*.json -l)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(git push:*)"
     ]
   }
 }
